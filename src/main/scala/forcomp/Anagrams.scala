@@ -35,11 +35,13 @@ object Anagrams extends AnagramsInterface:
    *
    *  Note: you must use `groupBy` to implement this method!
    */
-  def wordOccurrences(w: Word): Occurrences = ???
+  def wordOccurrences(w: Word): Occurrences =
+    w.toLowerCase().groupBy(c => c).map((k, v) => (k, v.length)).toList.sorted
 
   /** Converts a sentence into its character occurrence list. */
-  def sentenceOccurrences(s: Sentence): Occurrences = ???
-
+  def sentenceOccurrences(s: Sentence): Occurrences =
+    val allWords = s.foldLeft("")((w, acc) => acc + w)
+    wordOccurrences(allWords)
   /** The `dictionaryByOccurrences` is a `Map` from different occurrences to a sequence of all
    *  the words that have that occurrence count.
    *  This map serves as an easy way to obtain all the anagrams of a word given its occurrence list.
