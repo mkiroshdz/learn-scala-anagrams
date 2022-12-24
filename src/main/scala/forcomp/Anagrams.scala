@@ -115,7 +115,13 @@ object Anagrams extends AnagramsInterface:
    *  Note: the resulting value is an occurrence - meaning it is sorted
    *  and has no zero-entries.
    */
-  def subtract(x: Occurrences, y: Occurrences): Occurrences = ???
+  def subtract(x: Occurrences, y: Occurrences): Occurrences =
+    def subtractOccurrence(pair: (Char, Int), y: Occurrences):(Char, Int) = 
+      y.find((chr, _) => chr == pair._1) match
+      case Some((chr, cnt)) => (chr, pair._2 - cnt)
+      case _ => pair
+
+    x.map(pair => subtractOccurrence(pair, y)).filter((_, cnt) => cnt > 0)
 
   /** Returns a list of all anagram sentences of the given sentence.
    *
