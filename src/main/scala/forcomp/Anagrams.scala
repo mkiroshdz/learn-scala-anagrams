@@ -89,21 +89,10 @@ object Anagrams extends AnagramsInterface:
    *  in the example above could have been displayed in some other order.
    */
   def combinations(occurrences: Occurrences): List[Occurrences] =
-    def add(prev: List[Occurrences], options: Occurrences): List[Occurrences] =
-      if prev.isEmpty
-      then { options.map(pair => List(pair)) }
-      else {
-        for occ <- prev
-        pair <- options
-        yield occ ::: List(pair)
-      }
-
-    if occurrences == Nil
-    then List(Nil)
-    else {
-      val options = occurrences.map((chr, max) => (1 to max).map(cnt => (chr, cnt)).toList)
-      options.foldLeft(List[Occurrences]())((acc, opt) => acc ::: add(acc, opt))
-    }
+    occurrences.foldRight(List[Occurrences](Nil))((occ, acc) => acc ++ (for {
+			comb <- acc
+			i <- 1 to occ._2
+		} yield (occ._1, i) :: comb))
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
    *
@@ -120,8 +109,15 @@ object Anagrams extends AnagramsInterface:
       y.find((chr, _) => chr == pair._1) match
       case Some((chr, cnt)) => (chr, pair._2 - cnt)
       case _ => pair
+    
+    val p1 = x.map(pair => {
+      y.find((chr, _) => chr == pair._1) match
+      case Some((chr, cnt)) => (chr, pair._2 - cnt)
+      case _ => pair
+    })
 
-    x.map(pair => subtractOccurrence(pair, y)).filter((_, cnt) => cnt > 0)
+    val p2 = y.filter(pair => !x.exists((chr, _) => chr == pair._1)).map((chr, cnt) => (chr, -1 * cnt))
+    (p1 ::: p2).filter((_, cnt) => cnt != 0)
 
   /** Returns a list of all anagram sentences of the given sentence.
    *
@@ -163,7 +159,17 @@ object Anagrams extends AnagramsInterface:
    *
    *  Note: There is only one anagram of an empty sentence.
    */
-  def sentenceAnagrams(sentence: Sentence): List[Sentence] = ???
+  def sentenceAnagrams(sentence: Sentence): List[Sentence] =
+    def anag(occurrences: Occurrences): List[Sentence] = 
+      if (occurrences.isEmpty) List(Nil)
+      else for {
+        comb <- combinations(occurrences)
+        w <- dictionaryByOccurrences getOrElse(comb, Nil)
+        s <- anag(subtract(occurrences, wordOccurrences(w)))
+        if comb.nonEmpty
+      } yield w :: s
+
+    anag(sentenceOccurrences(sentence))
 
 object Dictionary:
   def loadDictionary: List[String] =
