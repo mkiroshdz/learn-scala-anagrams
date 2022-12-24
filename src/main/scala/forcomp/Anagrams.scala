@@ -57,10 +57,14 @@ object Anagrams extends AnagramsInterface:
    *    List(('a', 1), ('e', 1), ('t', 1)) -> Seq("ate", "eat", "tea")
    *
    */
-  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = ???
+  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = dictionary.groupBy(wordOccurrences)
 
   /** Returns all the anagrams of a given word. */
-  def wordAnagrams(word: Word): List[Word] = ???
+  def wordAnagrams(word: Word): List[Word] = 
+    val key = wordOccurrences(word)
+    dictionaryByOccurrences.get(key) match 
+    case Some(list) => list
+    case _ => List[Word]()
 
   /** Returns the list of all subsets of the occurrence list.
    *  This includes the occurrence itself, i.e. `List(('k', 1), ('o', 1))`
@@ -84,7 +88,22 @@ object Anagrams extends AnagramsInterface:
    *  Note that the order of the occurrence list subsets does not matter -- the subsets
    *  in the example above could have been displayed in some other order.
    */
-  def combinations(occurrences: Occurrences): List[Occurrences] = ???
+  def combinations(occurrences: Occurrences): List[Occurrences] =
+    def add(prev: List[Occurrences], options: Occurrences): List[Occurrences] =
+      if prev.isEmpty
+      then { options.map(pair => List(pair)) }
+      else {
+        for occ <- prev
+        pair <- options
+        yield occ ::: List(pair)
+      }
+
+    if occurrences == Nil
+    then List(Nil)
+    else {
+      val options = occurrences.map((chr, max) => (1 to max).map(cnt => (chr, cnt)).toList)
+      options.foldLeft(List[Occurrences]())((acc, opt) => acc ::: add(acc, opt))
+    }
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
    *
